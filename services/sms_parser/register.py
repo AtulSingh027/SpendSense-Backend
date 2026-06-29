@@ -5,7 +5,7 @@ Order matters: specific bank parsers are tried first (each checks sender_id).
 GenericParser is the fallback — always matches, always tried last.
 """
 
-from typing import Optional
+from typing import Optional, Tuple
 
 from services.sms_parser.base import ParsedTransaction
 from services.sms_parser.parsers.main_parser import (
@@ -23,7 +23,7 @@ PARSERS = [HDFCParser(), ICICIParser(), SBIParser(), BOBParser(), AxisParser()]
 FALLBACK = GenericParser()
 
 
-def parse_sms(sender_id: str, text: str) -> tuple[Optional[ParsedTransaction], Optional[str]]:
+def parse_sms(sender_id: str, text: str) -> Tuple[Optional[ParsedTransaction], Optional[str]]:
     """
     Try each bank parser in order; return (ParsedTransaction, parser_name) on
     the first successful parse.  Falls back to GenericParser.

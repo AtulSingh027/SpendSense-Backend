@@ -2,8 +2,11 @@ from models.category import Category
 from decimal import Decimal
 import logging
 from datetime import datetime, timezone, time, timedelta
-from zoneinfo import ZoneInfo
-from typing import Optional
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:
+    from backports.zoneinfo import ZoneInfo
+from typing import Optional, Tuple
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy import select, func, case
 from sqlalchemy.orm import Session
@@ -32,7 +35,7 @@ IST = ZoneInfo("Asia/Kolkata")
 
 #---------------------- Helpers ----------------------------------------------------------------------
 
-def _ist_day_bounds_utc(target_date) -> tuple[datetime, datetime]:
+def _ist_day_bounds_utc(target_date) -> Tuple[datetime, datetime]:
     """Day boundaries computed in IST, returned as naive UTC for DB comparison."""
     start_ist = datetime.combine(target_date, time.min, tzinfo=IST)
     end_ist = datetime.combine(target_date, time.max, tzinfo=IST)
@@ -42,7 +45,7 @@ def _ist_day_bounds_utc(target_date) -> tuple[datetime, datetime]:
     )
 
 
-def _ist_month_bounds_utc(year: int, month: int) -> tuple[datetime, datetime]:
+def _ist_month_bounds_utc(year: int, month: int) -> Tuple[datetime, datetime]:
     """Month boundaries computed in IST, returned as naive UTC for DB comparison."""
     start_ist = datetime(year, month, 1, 0, 0, 0, tzinfo=IST)
     

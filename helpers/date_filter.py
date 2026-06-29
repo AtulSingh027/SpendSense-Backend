@@ -21,9 +21,13 @@ naive UTC datetimes so they match the way timestamps are stored in the DB.
 """
 
 from datetime import datetime, time, timedelta
-from zoneinfo import ZoneInfo
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:
+    from backports.zoneinfo import ZoneInfo
 from datetime import timezone
 from enum import Enum
+from typing import Optional, Tuple
 from fastapi import HTTPException, status
 
 IST = ZoneInfo("Asia/Kolkata")
@@ -43,9 +47,9 @@ def _to_naive_utc(dt_ist: datetime) -> datetime:
 
 def resolve_date_range(
     filter_type: FilterType,
-    custom_start: datetime | None = None,
-    custom_end: datetime | None = None,
-) -> tuple[datetime, datetime]:
+    custom_start: Optional[datetime] = None,
+    custom_end: Optional[datetime] = None,
+) -> Tuple[datetime, datetime]:
     """
     Return (start_utc, end_utc) naive UTC datetimes for the requested period.
 

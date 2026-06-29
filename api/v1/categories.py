@@ -1,4 +1,5 @@
 import logging
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -63,7 +64,7 @@ def create_category(
 
 @router.get(
     "/",
-    response_model=list[CategoryResponse],
+    response_model=List[CategoryResponse],
     status_code=status.HTTP_200_OK,
     summary="Get all readable categories",
 )

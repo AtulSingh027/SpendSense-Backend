@@ -1,3 +1,4 @@
+from typing import Optional, Tuple
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -5,7 +6,7 @@ from helpers.middelwares.auth_middelware import create_access_token, hash_passwo
 from models.user import User
 
 
-def register_user(db: Session, phone_number: str, password: str, full_name: str | None, email: str | None) -> tuple[User, str]:
+def register_user(db: Session, phone_number: str, password: str, full_name: Optional[str], email: Optional[str]) -> Tuple[User, str]:
     """
     Create a new user with a hashed password and return (user, access_token).
     Raises ValueError if the phone number is already registered.
@@ -35,7 +36,7 @@ def login_user(
     db: Session,
     phone_number: str,
     password: str,
-) -> tuple[User, str]:
+) -> Tuple[User, str]:
     """
     Verify credentials and return (user, access_token).  
     Raises ValueError if the user is not found or password is incorrect.

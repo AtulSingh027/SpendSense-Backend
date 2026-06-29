@@ -10,7 +10,7 @@ IMPORTANT: This file must NOT import from .parsers — parsers import from here.
 import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, List
 
 
 # ---------------------------------------------------------------------------
@@ -31,7 +31,7 @@ class ParsedTransaction:
 # ---------------------------------------------------------------------------
 
 class BaseParser(ABC):
-    sender_patterns: list[str] = []
+    sender_patterns: List[str] = []
 
     def can_parse(self, sender_id: str, text: str) -> bool:
         """Default check: does the sender match any of our known patterns?"""

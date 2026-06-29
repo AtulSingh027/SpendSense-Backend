@@ -8,7 +8,10 @@ Called from:
 
 import logging
 from datetime import date, datetime, timedelta
-from zoneinfo import ZoneInfo
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:
+    from backports.zoneinfo import ZoneInfo
 
 from sqlalchemy import select, func, case
 from sqlalchemy.dialects.mysql import insert as mysql_insert

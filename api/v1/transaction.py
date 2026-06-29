@@ -1,5 +1,6 @@
 import logging
 from datetime import date, timedelta
+from typing import Optional
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 from sqlalchemy import extract, func, select
 from sqlalchemy.orm import Session
@@ -28,13 +29,13 @@ router = APIRouter(prefix="/transaction", tags=["transaction"])
     summary="Get all transactions",
 )
 def get_all_transactions(
-    category_id: int | None = Query(None),
-    month: int | None = Query(None, ge=1, le=12),
-    year: int | None = Query(None, ge=2000),
-    from_date: date | None = Query(None),
-    to_date: date | None = Query(None),
-    source: str | None = Query(None),
-    upi_app: str | None = Query(None),
+    category_id: Optional[int] = Query(None),
+    month: Optional[int] = Query(None, ge=1, le=12),
+    year: Optional[int] = Query(None, ge=2000),
+    from_date: Optional[date] = Query(None),
+    to_date: Optional[date] = Query(None),
+    source: Optional[str] = Query(None),
+    upi_app: Optional[str] = Query(None),
     limit: int = Query(10, ge=1, le=100),
     offset: int = Query(0, ge=0),
     current_user_id: int = Depends(get_current_user),

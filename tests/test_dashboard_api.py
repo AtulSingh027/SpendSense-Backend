@@ -1,6 +1,9 @@
 import random
 from datetime import datetime, timezone, timedelta
-from zoneinfo import ZoneInfo
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:
+    from backports.zoneinfo import ZoneInfo
 import pytest
 from fastapi.testclient import TestClient
 

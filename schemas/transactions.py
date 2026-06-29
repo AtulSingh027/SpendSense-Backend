@@ -1,20 +1,21 @@
 from datetime import datetime
 from decimal import Decimal
-from pydantic import BaseModel, Field, ConfigDict
+from typing import Optional, List
+from pydantic import BaseModel, Field, ConfigDict, condecimal
 
 
 class TransactionCreate(BaseModel):
     """Client-facing schema for manual transaction creation.
     Server-managed fields (app_label_source, app_label_confidence, bank_ref_id)
     are intentionally excluded — the server decides these values."""
-    amount: Decimal = Field(..., gt=0, decimal_places=2)
+    amount: float
     txn_type: str = Field(..., pattern="^(debit|credit)$")
-    merchant_raw: str | None = None
-    category_id: int | None = None
-    upi_app: str | None = None
+    merchant_raw: Optional[str] = None
+    category_id: Optional[int] = None
+    upi_app: Optional[str] = None
     source: str = Field(..., pattern="^(sms|manual)$")
     txn_timestamp: datetime
-    notes: str | None = None
+    notes: Optional[str] = None
 
 
 class TransactionUpdate(BaseModel):
@@ -22,33 +23,33 @@ class TransactionUpdate(BaseModel):
     Server-managed fields (app_label_source, app_label_confidence, bank_ref_id)
     are intentionally excluded — when upi_app is set, the server auto-flips
     app_label_source to 'user_labeled' and clears app_label_confidence."""
-    amount: Decimal | None = Field(None, gt=0, decimal_places=2)
-    txn_type: str | None = None
-    merchant_raw: str | None = None
-    category_id: int | None = None
-    upi_app: str | None = None
-    source: str | None = None
-    txn_timestamp: datetime | None = None
-    notes: str | None = None
+    amount: Optional[condecimal(gt=0, decimal_places=2)] = None
+    txn_type: Optional[str] = None
+    merchant_raw: Optional[str] = None
+    category_id: Optional[int] = None
+    upi_app: Optional[str] = None
+    source: Optional[str] = None
+    txn_timestamp: Optional[datetime] = None
+    notes: Optional[str] = None
 
 
 class TransactionResponse(BaseModel):
     id: int
     user_id: int
-    sms_log_id: int | None = None
+    sms_log_id: Optional[int] = None
     amount: Decimal
     txn_type: str
-    merchant_raw: str | None = None
-    merchant_clean: str | None = None
-    category_id: int | None = None
-    upi_app: str | None = None
-    app_label_source: str | None = None
-    app_label_confidence: float | None = None
+    merchant_raw: Optional[str] = None
+    merchant_clean: Optional[str] = None
+    category_id: Optional[int] = None
+    upi_app: Optional[str] = None
+    app_label_source: Optional[str] = None
+    app_label_confidence: Optional[float] = None
     source: str
-    bank_ref_id: str | None = None
+    bank_ref_id: Optional[str] = None
     txn_timestamp: datetime
-    notes: str | None = None
-    category_name: str | None = None
+    notes: Optional[str] = None
+    category_name: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 
@@ -59,4 +60,4 @@ class TransactionListResponse(BaseModel):
     total: int
     limit: int
     offset: int
-    items: list[TransactionResponse]
+    items: List[TransactionResponse]

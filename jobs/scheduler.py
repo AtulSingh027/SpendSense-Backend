@@ -7,7 +7,10 @@ Catches any drift from failed BackgroundTasks (server restart, DB hiccup, etc.).
 
 import logging
 from datetime import datetime
-from zoneinfo import ZoneInfo
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:
+    from backports.zoneinfo import ZoneInfo
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from sqlalchemy import select

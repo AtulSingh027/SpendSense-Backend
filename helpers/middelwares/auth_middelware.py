@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 
 import bcrypt
 from fastapi import Depends, HTTPException, status
@@ -65,7 +66,7 @@ async def get_current_user(
     try:
         payload = decode_access_token(credentials.credentials)
 
-        user_id: int | None = payload.get("user_id")
+        user_id: Optional[int] = payload.get("user_id")
 
         if user_id is None:
             raise HTTPException(

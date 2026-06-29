@@ -8,3 +8,4 @@ python-dotenv
 python-jose[cryptography]
 bcrypt
 apscheduler
+backports.zoneinfo; python_version < "3.9"
