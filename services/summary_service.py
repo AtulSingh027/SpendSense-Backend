@@ -14,7 +14,7 @@ except ImportError:
     from backports.zoneinfo import ZoneInfo
 
 from sqlalchemy import select, func, case
-from sqlalchemy.dialects.mysql import insert as mysql_insert
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
 from models.transaction import Transaction
@@ -118,7 +118,7 @@ def recompute_month(db: Session, user_id: int, year: int, month: int):
 
     agg = _aggregate(db, user_id, start_utc, end_utc)
 
-    stmt = mysql_insert(MonthlySummary).values(
+    stmt = pg_insert(MonthlySummary).values(
         user_id=user_id,
         year=year,
         month=month,
@@ -129,13 +129,16 @@ def recompute_month(db: Session, user_id: int, year: int, month: int):
         source_breakdown=agg["source_breakdown"],
         txn_count=agg["txn_count"],
     )
-    stmt = stmt.on_duplicate_key_update(
-        total_spent=stmt.inserted.total_spent,
-        total_credit=stmt.inserted.total_credit,
-        category_breakdown=stmt.inserted.category_breakdown,
-        app_breakdown=stmt.inserted.app_breakdown,
-        source_breakdown=stmt.inserted.source_breakdown,
-        txn_count=stmt.inserted.txn_count,
+    stmt = stmt.on_conflict_do_update(
+        index_elements=["user_id", "year", "month"],
+        set_={
+            "total_spent": stmt.excluded.total_spent,
+            "total_credit": stmt.excluded.total_credit,
+            "category_breakdown": stmt.excluded.category_breakdown,
+            "app_breakdown": stmt.excluded.app_breakdown,
+            "source_breakdown": stmt.excluded.source_breakdown,
+            "txn_count": stmt.excluded.txn_count,
+        }
     )
     db.execute(stmt)
     db.commit()
@@ -153,7 +156,7 @@ def recompute_week(db: Session, user_id: int, ws: date):
 
     agg = _aggregate(db, user_id, start_utc, end_utc)
 
-    stmt = mysql_insert(WeeklySummary).values(
+    stmt = pg_insert(WeeklySummary).values(
         user_id=user_id,
         week_start=ws,
         total_spent=agg["total_spent"],
@@ -161,11 +164,14 @@ def recompute_week(db: Session, user_id: int, ws: date):
         source_breakdown=agg["source_breakdown"],
         txn_count=agg["txn_count"],
     )
-    stmt = stmt.on_duplicate_key_update(
-        total_spent=stmt.inserted.total_spent,
-        app_breakdown=stmt.inserted.app_breakdown,
-        source_breakdown=stmt.inserted.source_breakdown,
-        txn_count=stmt.inserted.txn_count,
+    stmt = stmt.on_conflict_do_update(
+        index_elements=["user_id", "week_start"],
+        set_={
+            "total_spent": stmt.excluded.total_spent,
+            "app_breakdown": stmt.excluded.app_breakdown,
+            "source_breakdown": stmt.excluded.source_breakdown,
+            "txn_count": stmt.excluded.txn_count,
+        }
     )
     db.execute(stmt)
     db.commit()

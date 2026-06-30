@@ -1,22 +1,23 @@
 version: "3.8"
 
 services:
-  mysql:
-    image: mysql:8.0
-    container_name: spendsense_mysql
+  postgres:
+    image: postgres:15-alpine
+    container_name: spendsense_postgres
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: SpendSense@2024
-      MYSQL_DATABASE: spend_sense
+      POSTGRES_DB: spend_sense
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 12345
     ports:
-      - "3307:3306"
+      - "5433:5432"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d spend_sense"]
       interval: 10s
       timeout: 5s
       retries: 5
 
 volumes:
-  mysql_data:
+  postgres_data:

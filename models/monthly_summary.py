@@ -1,9 +1,13 @@
-from sqlalchemy import Column, Integer, JSON, DateTime, Float
+from sqlalchemy import Column, Integer, JSON, DateTime, Float, UniqueConstraint
 from sqlalchemy.sql import func
 from configs.db_config import Base
 
 class MonthlySummary(Base):
     __tablename__ = 'monthly_summaries'
+
+    __table_args__ = (
+        UniqueConstraint('user_id', 'year', 'month', name='uq_user_year_month'),
+    )
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer)

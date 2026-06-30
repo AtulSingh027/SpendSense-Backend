@@ -11,12 +11,12 @@ db_name = os.getenv("DATABASE_NAME", "spend_sense")
 db_user = os.getenv("DATABASE_USER", "root")
 db_password = os.getenv("DATABASE_PASSWORD", "12345")
 db_host = os.getenv("DATABASE_HOST", "localhost")
-db_port = os.getenv("DATABASE_PORT", "3306")
+db_port = os.getenv("DATABASE_PORT", "5432")
 
-# Construct the MySQL database URL using pymysql
-DATABASE_URL = f"mysql+pymysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+# Construct the PostgreSQL database URL using psycopg2
+DATABASE_URL = f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
 
-# Create the SQLAlchemy engine for MySQL
+# Create the SQLAlchemy engine for PostgreSQL
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 
 # Create a sessionmaker factory for database sessions
