@@ -264,45 +264,70 @@ def get_current_month_spend(
     summary="Get Pie Chart BreakDown Category wise"
 )
 def get_category_breakdown(
+    filter_type: FilterType = Query(
+        FilterType.month,
+        description="Period granularity: day | week | month | custom",
+    ),
+    custom_start: Optional[str] = Query(
+        None,
+        description="Required when filter_type=custom. ISO-8601 date e.g. 2024-06-01",
+    ),
+    custom_end: Optional[str] = Query(
+        None,
+        description="Required when filter_type=custom. ISO-8601 date e.g. 2024-06-30",
+    ),
     current_user_id: int = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     try:
-        now_ist = datetime.now(IST)
+        # Parse custom date strings when filter_type is custom
+        parsed_start = datetime.fromisoformat(custom_start) if custom_start else None
+        parsed_end = datetime.fromisoformat(custom_end) if custom_end else None
 
-        row = db.query(MonthlySummary).filter_by(
-            user_id=current_user_id, year=now_ist.year, month=now_ist.month
-        ).first()
+        start_utc, end_utc = resolve_date_range(filter_type, parsed_start, parsed_end)
 
-        breakdown = row.category_breakdown if row else {}
-        total_amount = Decimal(str(row.total_spent)) if row else Decimal("0")
+        # Query and aggregate transactions grouped by category
+        stmt = (
+            select(
+                Transaction.category_id,
+                Category.name.label("category_name"),
+                func.coalesce(func.sum(Transaction.amount), 0).label("amount")
+            )
+            .outerjoin(Category, Transaction.category_id == Category.id)
+            .where(
+                Transaction.user_id == current_user_id,
+                Transaction.txn_type == "debit",
+                Transaction.txn_timestamp >= start_utc,
+                Transaction.txn_timestamp <= end_utc,
+            )
+            .group_by(Transaction.category_id, Category.name)
+        )
 
-        if not breakdown:
-            return DashboardBreakdownResponse(total_amount=total_amount, categories=[])
+        results = db.execute(stmt).all()
 
-        # Resolve category IDs → names in one query
-        cat_ids = [int(k) for k in breakdown if k != "uncategorized"]
-        cat_name_map = {}
-        if cat_ids:
-            rows = db.execute(
-                select(Category.id, Category.name).where(Category.id.in_(cat_ids))
-            ).all()
-            cat_name_map = {str(cid): name for cid, name in rows}
+        total_amount = Decimal("0.00")
+        category_map = {}
+
+        for row in results:
+            cat_name = row.category_name if row.category_name else "Uncategorized"
+            amount = Decimal(str(row.amount))
+            category_map[cat_name] = category_map.get(cat_name, Decimal("0.00")) + amount
+            total_amount += amount
 
         categories = []
-        for key, amt in breakdown.items():
-            cat_name = cat_name_map.get(key, "Uncategorized") if key != "uncategorized" else "Uncategorized"
-            amount = Decimal(str(amt))
+        for name, amount in category_map.items():
             percentage = round(float((amount / total_amount) * 100), 2) if total_amount > 0 else 0.00
             categories.append(
-                CategoryBreakdownItem(category_name=cat_name, amount=amount, percentage=percentage)
+                CategoryBreakdownItem(category_name=name, amount=amount, percentage=percentage)
             )
 
-        # Sort descending by amount (matching previous behavior)
+        # Sort descending by amount
         categories.sort(key=lambda x: x.amount, reverse=True)
 
         return DashboardBreakdownResponse(total_amount=total_amount, categories=categories)
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.exception("Failed to fetch category breakdown")
         raise HTTPException(
