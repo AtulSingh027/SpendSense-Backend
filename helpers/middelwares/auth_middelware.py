@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-JWT_SECRET = os.getenv("JWT_SECRET")
+JWT_SECRET = os.getenv("JWT_SECRET", "f7a3e9c1d4b8f2a6e0c5d9b3a7f1e4c8d2b6a0f5e9c3d7b1a5f9e3c7d1b5a9")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 
 _bearer_scheme = HTTPBearer()
