@@ -1,6 +1,6 @@
-from schemas import UserResponse, UserUpdate
+from schemas.user import UserResponse, UserUpdate
 from fastapi import Depends, HTTPException, status, APIRouter
-from models import User
+from models.user import User
 from configs.db_config import get_db
 from helpers.middelwares.auth_middelware import get_current_user
 from sqlalchemy.orm import Session
