@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime
+from sqlalchemy import Column, Integer, String, Text, DateTime, UniqueConstraint
 from sqlalchemy.sql import func
 from configs.db_config import Base
 
@@ -9,9 +9,14 @@ class SMSLog(Base):
     user_id = Column(Integer)
     sender_id = Column(String(20))
     raw_text = Column(Text, nullable=False)
+    sms_hash = Column(String(64), nullable=True)  # SHA-256
     received_at = Column(DateTime, nullable=False)
     parse_status = Column(String(20), default='pending')
     parser_used = Column(String(50))
     parse_error = Column(Text)
     created_at = Column(DateTime, server_default=func.now())
+
+    __table_args__ = (
+        UniqueConstraint('user_id', 'sms_hash', name='uq_user_sms_hash'),
+    )
     

@@ -16,6 +16,7 @@ from schemas.sms import (
     SMSIngestResponse,
 )
 from services.sms_parser.register import parse_sms
+from hashlib import sha256
 
 router = APIRouter(prefix="/sms", tags=["SMS"])
 
@@ -26,11 +27,35 @@ def _process_single_sms(
     """
     Core business logic helper to ingest, parse, log, and store transaction.
     """
+    hash_sms = sha256(f"{sms_data.sender_id}|{sms_data.raw_text}|{sms_data.received_at}".encode()).hexdigest()
+    
+    # Check if a log with this hash already exists for this user
+    existing_log = db.execute(
+        select(SMSLog).where(
+            SMSLog.user_id == user_id,
+            SMSLog.sms_hash == hash_sms,
+        )
+    ).scalar_one_or_none()
+
+    if existing_log:
+        existing_txn = None
+        if existing_log.parse_status == "parsed":
+            existing_txn = db.execute(
+                select(Transaction).where(Transaction.sms_log_id == existing_log.id)
+            ).scalar_one_or_none()
+        return SMSIngestResponse(
+            sms_log_id=existing_log.id,
+            parsed=existing_log.parse_status == "parsed",
+            transaction_id=existing_txn.id if existing_txn else None,
+            duplicate=True,
+        )
+
     # 1. Log the raw SMS
     log = SMSLog(
         user_id=user_id,
         sender_id=sms_data.sender_id,
         raw_text=sms_data.raw_text,
+        sms_hash=hash_sms,
         received_at=sms_data.received_at,
         parse_status="pending",
     )
@@ -42,6 +67,7 @@ def _process_single_sms(
     try:
         result, parser_used = parse_sms(sms_data.sender_id, sms_data.raw_text)
     except Exception as e:
+        log.sms_hash = hash_sms
         log.parse_status = "failed"
         log.parse_error = str(e)
         db.commit()
@@ -83,7 +109,6 @@ def _process_single_sms(
                 duplicate=True,
             )
 
-    # 5. Insert new Transaction
     txn = Transaction(
         user_id=user_id,
         sms_log_id=log.id,
