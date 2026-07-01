@@ -64,7 +64,21 @@ def get_all_transactions(
             filters.append(Transaction.source == source)
 
         if upi_app is not None:
-            filters.append(Transaction.upi_app == upi_app)
+            app_lower = upi_app.lower()
+            if app_lower in ["gpay", "googlepay", "google_pay"]:
+                filters.append(func.lower(Transaction.upi_app).in_(["gpay", "googlepay", "google_pay"]))
+            elif app_lower in ["phonepe", "phone_pay", "phonepay"]:
+                filters.append(func.lower(Transaction.upi_app).in_(["phonepe", "phone_pay", "phonepay"]))
+            elif app_lower in ["paytm", "pay_tm"]:
+                filters.append(func.lower(Transaction.upi_app).in_(["paytm", "pay_tm"]))
+            elif app_lower in ["unknown", "other"]:
+                filters.append(
+                    (func.lower(Transaction.upi_app).in_(["unknown", "other"])) |
+                    (Transaction.upi_app == None) |
+                    (Transaction.upi_app == "")
+                )
+            else:
+                filters.append(func.lower(Transaction.upi_app) == app_lower)
         
 
         total = db.scalar(
