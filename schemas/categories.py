@@ -5,12 +5,12 @@ from pydantic import BaseModel, Field, ConfigDict
 
 class CategoryCreate(BaseModel):
     name: str = Field(..., max_length=50, min_length=1, description="Name of the category")
-    icon: Optional[str] = Field(None, max_length=50, description="Icon representing the category")
+    icon: Optional[str] = Field(None, max_length=255, description="Icon representing the category")
 
 
 class CategoryUpdate(BaseModel):
     name: Optional[str] = Field(None, max_length=50, min_length=1, description="Name of the category")
-    icon: Optional[str] = Field(None, max_length=50, description="Icon representing the category")
+    icon: Optional[str] = Field(None, max_length=255, description="Icon representing the category")
 
 
 class CategoryResponse(BaseModel):

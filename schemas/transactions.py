@@ -50,6 +50,7 @@ class TransactionResponse(BaseModel):
     txn_timestamp: datetime
     notes: Optional[str] = None
     category_name: Optional[str] = None
+    sms_raw_text: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 

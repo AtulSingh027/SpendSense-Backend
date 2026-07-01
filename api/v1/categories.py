@@ -1,3 +1,4 @@
+from helpers.upload_image_cloudinary import upload_image_to_cloudinary
 import logging
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -40,9 +41,12 @@ def create_category(
                 detail="Category already exists",
             )
 
+        # upload icon to cloudinary (returns URL if file/URI, or system name if default)
+        uploaded_icon = upload_image_to_cloudinary(body.icon)
+
         new_category = Category(
             name=body.name,
-            icon=body.icon,
+            icon=uploaded_icon,
             user_id=current_user_id,
             is_system=False,
         )
@@ -180,7 +184,7 @@ def update_category(
             category.name = body.name
 
         if body.icon is not None:
-            category.icon = body.icon
+            category.icon = upload_image_to_cloudinary(body.icon)
 
         db.commit()
         db.refresh(category)

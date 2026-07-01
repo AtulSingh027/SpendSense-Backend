@@ -13,6 +13,7 @@ class UserCreate(BaseModel):
     password: str = Field(..., min_length=6, max_length=255)
     full_name: Optional[str] = Field(None, min_length=3, max_length=100)
     email: Optional[str] = Field(None, min_length=3, max_length=255)
+    image_url: Optional[str] = None
 
 
 class UserLogin(BaseModel):
@@ -24,6 +25,7 @@ class UserUpdate(BaseModel):
     full_name: Optional[str] = None
     email: Optional[str] = None
     phone_number: Optional[str] = None
+    image_url: Optional[str] = None
 
 
 # ---------------------------------------------------------------------------
@@ -35,6 +37,7 @@ class UserResponse(BaseModel):
     phone_number: str
     full_name: Optional[str] = None
     email: Optional[str] = None
+    image_url: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 
@@ -45,3 +48,4 @@ class AuthResponse(BaseModel):
     user: UserResponse
     access_token: str
     token_type: str = "bearer"
+

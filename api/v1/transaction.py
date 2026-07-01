@@ -9,6 +9,7 @@ from configs.db_config import get_db
 from helpers.middelwares.auth_middelware import get_current_user
 from models.transaction import Transaction
 from models.category import Category
+from models.sms_log import SMSLog
 from services.summary_service import recompute_for_date
 from schemas.transactions import (
     TransactionCreate,
@@ -113,8 +114,13 @@ def get_transaction_by_id(
 ):
     try:
         result = db.execute(
-            select(Transaction, Category.name.label("category_name"))
+            select(
+                Transaction,
+                Category.name.label("category_name"),
+                SMSLog.raw_text.label("sms_raw_text")
+            )
             .outerjoin(Category, Transaction.category_id == Category.id)
+            .outerjoin(SMSLog, Transaction.sms_log_id == SMSLog.id)
             .where(Transaction.id == id)
         ).first()
 
@@ -124,7 +130,7 @@ def get_transaction_by_id(
                 detail="Transaction not found.",
             )
 
-        transaction, category_name = result
+        transaction, category_name, sms_raw_text = result
         if transaction.user_id != current_user_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -132,6 +138,7 @@ def get_transaction_by_id(
             )
 
         transaction.category_name = category_name
+        transaction.sms_raw_text = sms_raw_text
         return transaction
 
     except HTTPException:

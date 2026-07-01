@@ -1,3 +1,4 @@
+from helpers.middelwares.auth_middelware import get_current_user
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 

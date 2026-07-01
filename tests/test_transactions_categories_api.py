@@ -251,3 +251,40 @@ def test_transaction_lifecycle(test_user_1, test_user_2, db_session):
     deleted_txn = db_session.get(Transaction, txn_id)
     assert deleted_txn is None
 
+
+def test_category_icon_cloudinary_upload(test_user_1, db_session):
+    headers_1, uid_1 = test_user_1
+
+    # 1. Create a category with a valid 1x1 transparent base64 PNG data URI
+    base64_icon = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+    cat_payload = {"name": "CloudinaryCategory", "icon": base64_icon}
+    
+    res = client.post("/api/v1/categories/create", json=cat_payload, headers=headers_1)
+    assert res.status_code == 201
+    cat_data = res.json()
+    assert cat_data["name"] == "CloudinaryCategory"
+    assert cat_data["icon"] is not None
+    assert "cloudinary" in cat_data["icon"]
+    assert cat_data["icon"].startswith("https://")
+    cat_id = cat_data["id"]
+
+    # 2. Update category icon with another base64 string
+    new_base64_icon = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+    update_payload = {"name": "CloudinaryCategoryUpdated", "icon": new_base64_icon}
+    
+    res_update = client.put(f"/api/v1/categories/{cat_id}", json=update_payload, headers=headers_1)
+    assert res_update.status_code == 200
+    updated_data = res_update.json()
+    assert updated_data["icon"] is not None
+    assert "cloudinary" in updated_data["icon"]
+    assert updated_data["icon"].startswith("https://")
+    assert updated_data["icon"] != cat_data["icon"]
+
+    # Cleanup category from DB
+    db_session.rollback()
+    category = db_session.get(Category, cat_id)
+    if category:
+        db_session.delete(category)
+        db_session.commit()
+
+
