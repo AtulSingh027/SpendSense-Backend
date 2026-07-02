@@ -12,5 +12,6 @@ class User(Base):
     email = Column(String(255), unique=True)
     password_hash = Column(String(255), nullable=False)
     full_name = Column(String(100))
+    image_url = Column(String(255), nullable=True)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())

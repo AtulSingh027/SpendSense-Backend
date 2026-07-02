@@ -74,14 +74,15 @@ def update_user_profile(
                 detail="User not found",
             )
 
-        if body.full_name:
+        if body.full_name is not None:
             user.full_name = body.full_name
-        if body.email:
+        if body.email is not None:
             user.email = body.email
-        if body.phone_number:
+        if body.phone_number is not None:
             user.phone_number = body.phone_number
-        if body.image_url:
-            user.image_url = body.image_url
+        if body.image_url is not None:
+            from helpers.upload_image_cloudinary import upload_image_to_cloudinary
+            user.image_url = upload_image_to_cloudinary(body.image_url)
 
         db.commit()
         db.refresh(user)
