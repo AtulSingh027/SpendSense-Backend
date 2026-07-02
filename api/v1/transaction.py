@@ -1,6 +1,7 @@
 import logging
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime, time, timezone
 from typing import Optional
+from helpers.date_filter import IST
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 from sqlalchemy import extract, func, select
 from sqlalchemy.orm import Session
@@ -55,10 +56,16 @@ def get_all_transactions(
             filters.append(extract("year", Transaction.txn_timestamp) == year)
 
         if from_date is not None:
-            filters.append(Transaction.txn_timestamp >= from_date)
+            # Convert from_date (IST date) to UTC start of day
+            from_dt_ist = datetime.combine(from_date, time.min, tzinfo=IST)
+            from_dt_utc = from_dt_ist.astimezone(timezone.utc).replace(tzinfo=None)
+            filters.append(Transaction.txn_timestamp >= from_dt_utc)
 
         if to_date is not None:
-            filters.append(Transaction.txn_timestamp < (to_date + timedelta(days=1)))
+            # Convert to_date (IST date) to UTC end of day
+            to_dt_ist = datetime.combine(to_date, time.max, tzinfo=IST)
+            to_dt_utc = to_dt_ist.astimezone(timezone.utc).replace(tzinfo=None)
+            filters.append(Transaction.txn_timestamp <= to_dt_utc)
 
         if source is not None:
             filters.append(Transaction.source == source)
